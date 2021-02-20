@@ -47,6 +47,7 @@ SECTIONS
 		*(.data .data.*)
 	}
 
+	/*
 	.bss : {
 		PROVIDE(edata = .);
 		*(.dynbss)
@@ -54,6 +55,14 @@ SECTIONS
 		*(COMMON)
 		PROVIDE(end = .);
 	}
+	*/
+	.bss : {
+                PROVIDE(edata = .);
+               *(.dynbss)
+               *(.bss .bss.*)
+               *(COMMON)
+                PROVIDE(end = .);
+        }
 
 
 	/DISCARD/ : {
