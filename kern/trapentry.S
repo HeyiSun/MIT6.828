@@ -88,22 +88,22 @@ vectors:
 	TRAPHANDLER(t_29_handler, 29)        // 29
 	TRAPHANDLER(t_30_handler, 30)        // 30
 	TRAPHANDLER(t_31_handler, 31)        // 31
-	TRAPHANDLER(t_32_handler, 32)        // 32
-	TRAPHANDLER(t_33_handler, 33)        // 33
-	TRAPHANDLER(t_34_handler, 34)        // 34
-	TRAPHANDLER(t_35_handler, 35)        // 35
-	TRAPHANDLER(t_36_handler, 36)        // 36
-	TRAPHANDLER(t_37_handler, 37)        // 37
-	TRAPHANDLER(t_38_handler, 38)        // 38
-	TRAPHANDLER(t_39_handler, 39)        // 39
-	TRAPHANDLER(t_40_handler, 40)        // 40
-	TRAPHANDLER(t_41_handler, 41)        // 41
-	TRAPHANDLER(t_42_handler, 42)        // 42
-	TRAPHANDLER(t_43_handler, 43)        // 43
-	TRAPHANDLER(t_44_handler, 44)        // 44
-	TRAPHANDLER(t_45_handler, 45)        // 45
-	TRAPHANDLER(t_46_handler, 46)        // 46
-	TRAPHANDLER(t_47_handler, 47)        // 47
+	TRAPHANDLER_NOEC(t_32_handler, 32)        // 32  IRQ0
+	TRAPHANDLER_NOEC(t_33_handler, 33)        // 33   |
+	TRAPHANDLER_NOEC(t_34_handler, 34)        // 34   |
+	TRAPHANDLER_NOEC(t_35_handler, 35)        // 35   |
+	TRAPHANDLER_NOEC(t_36_handler, 36)        // 36   |
+	TRAPHANDLER_NOEC(t_37_handler, 37)        // 37   |
+	TRAPHANDLER_NOEC(t_38_handler, 38)        // 38   |
+	TRAPHANDLER_NOEC(t_39_handler, 39)        // 39   |
+	TRAPHANDLER_NOEC(t_40_handler, 40)        // 40   |
+	TRAPHANDLER_NOEC(t_41_handler, 41)        // 41   |
+	TRAPHANDLER_NOEC(t_42_handler, 42)        // 42   |
+	TRAPHANDLER_NOEC(t_43_handler, 43)        // 43   |
+	TRAPHANDLER_NOEC(t_44_handler, 44)        // 44   |
+	TRAPHANDLER_NOEC(t_45_handler, 45)        // 45  \|/
+	TRAPHANDLER_NOEC(t_46_handler, 46)        // 46   V
+	TRAPHANDLER_NOEC(t_47_handler, 47)        // 47  IRQ15
 	
 	TRAPHANDLER_NOEC(handler_syscall, T_SYSCALL)
 /*
