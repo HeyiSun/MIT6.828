@@ -11,6 +11,7 @@
 #include <kern/monitor.h>
 #include <kern/kdebug.h>
 #include <kern/trap.h>
+#include <kern/env.h>
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
 
@@ -25,6 +26,9 @@ struct Command {
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "backtrace", "Display backtrace info", mon_backtrace },
+	{ "continue", "Continue executing current user program", mon_continue },
+	{ "singlestep", "Toggle single stepping for current user program", mon_singlestep },
 };
 
 /***** Implementations of basic kernel monitor commands *****/
@@ -58,11 +62,58 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
-	// Your code here.
+	cprintf("Stack backtrace:\n");
+	uint32_t cur_ebp = read_ebp();  // ebp for this function
+	while (cur_ebp != 0) {
+		uint32_t ebp = *((uint32_t*) cur_ebp);
+		uint32_t eip = *(((uint32_t*) cur_ebp) + 1);
+		cprintf("ebp %08x  eip %08x  args", cur_ebp, eip);
+		for (int i = 0; i < 5; ++i) {
+			uint32_t arg = *(((uint32_t*) cur_ebp) + 2 + i);
+			cprintf(" %08x", arg);
+		}
+		cprintf("\n");
+		struct Eipdebuginfo info;
+		int res = debuginfo_eip((uintptr_t) eip, &info);
+		if (res == -1) {
+			continue;
+		}
+		cprintf("       %s:%d: %.*s+%d\n", info.eip_file, info.eip_line, 
+			info.eip_fn_namelen, info.eip_fn_name,
+			eip - (uint32_t)info.eip_fn_addr);
+		cur_ebp = ebp;
+	}
 	return 0;
 }
 
+int
+mon_continue(int argc, char **argv, struct Trapframe *tf)
+{
+	if (tf->tf_trapno != T_BRKPT && tf->tf_trapno != T_DEBUG) {
+		cprintf("The monitor is not invoked from a breakpoint/debug trap!\n");
+		return -1;
+	}
+	assert(curenv && curenv->env_status == ENV_RUNNING);
+	env_run(curenv);
+}
 
+int
+mon_singlestep(int argc, char **argv, struct Trapframe *tf)
+{
+	if (tf->tf_trapno != T_BRKPT && tf->tf_trapno != T_DEBUG) {
+		cprintf("The monitor is not invoked from a breakpoint/debug trap!\n");
+		return -1;
+	}
+
+	uint32_t tf_mask = 0x100;
+	tf->tf_eflags ^= tf_mask;
+	if (tf->tf_eflags & tf_mask) {
+		cprintf("Enabled Single Step\n");
+	} else {
+		cprintf("Disabled Single step\n");
+	}
+	return 0;
+}
 
 /***** Kernel monitor command interpreter *****/
 
