@@ -14,6 +14,7 @@
 
 static int diskno = 1;
 
+// 神tm像boot/main里的waitdisk
 static int
 ide_wait_ready(bool check_error)
 {
@@ -60,6 +61,7 @@ ide_set_disk(int d)
 }
 
 
+// 类似boot/main.c:readsect, 只是这个是读多个sector的版本
 int
 ide_read(uint32_t secno, void *dst, size_t nsecs)
 {
