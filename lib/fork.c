@@ -120,7 +120,12 @@ fork(void)
 		if ((uvpd[pdx] & PTE_P) &&
 		    (uvpt[pgnum] & PTE_P) &&
 		    (uvpt[pgnum] & PTE_U)) {
-			if ((uvpt[pgnum] & PTE_COW) || (uvpt[pgnum] & PTE_W)) {
+            if (uvpt[pgnum] & PTE_SHARE) {
+				r = sys_page_map(0, (void *)addr, envid, (void *)addr, uvpt[pgnum]&PTE_SYSCALL);
+				if (r < 0) {
+					panic("fork: pte_share sys_page_map fail\n");
+				}
+            } else if ((uvpt[pgnum] & PTE_COW) || (uvpt[pgnum] & PTE_W)) {
 				duppage(envid, pgnum);
 			} else {
 				r = sys_page_map(0, (void *)addr, envid, (void *)addr, PTE_U | PTE_P);

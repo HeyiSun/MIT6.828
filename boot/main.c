@@ -84,6 +84,7 @@ readseg(uint32_t pa, uint32_t count, uint32_t offset)
 	pa &= ~(SECTSIZE - 1);
 
 	// translate from bytes to sectors, and kernel starts at sector 1
+    // 这步使得读取的时候，直接读的是kernel.img中的第二扇区
 	offset = (offset / SECTSIZE) + 1;
 
 	// If this is too slow, we could read lots of sectors at a time.

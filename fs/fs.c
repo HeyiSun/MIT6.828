@@ -62,7 +62,15 @@ alloc_block(void)
 	// super->s_nblocks blocks in the disk altogether.
 
 	// LAB 5: Your code here.
-	panic("alloc_block not implemented");
+    int blockno;
+    int bitmap_block_size = (super->s_nblocks + BLKBITSIZE - 1) / BLKBITSIZE;
+    for (blockno = 2 + bitmap_block_size; blockno < super->s_nblocks; blockno++) {
+        if (block_is_free(blockno)) {
+            bitmap[blockno/32] &= ~(1<<(blockno%32));
+            flush_block(bitmap);
+            return blockno;
+        }
+    }
 	return -E_NO_DISK;
 }
 
@@ -76,8 +84,9 @@ check_bitmap(void)
 	uint32_t i;
 
 	// Make sure all bitmap blocks are marked in-use
-	for (i = 0; i * BLKBITSIZE < super->s_nblocks; i++)
+	for (i = 0; i * BLKBITSIZE < super->s_nblocks; i++) {
 		assert(!block_is_free(2+i));
+    }
 
 	// Make sure the reserved and root blocks are marked in-use.
 	assert(!block_is_free(0));
@@ -131,11 +140,34 @@ fs_init(void)
 //
 // Analogy: This is like pgdir_walk for files.
 // Hint: Don't forget to clear any block you allocate.
+// 这里的alloc是指，如果当前文件没有存block number的indirect block, 那么就分配一个
 static int
 file_block_walk(struct File *f, uint32_t filebno, uint32_t **ppdiskbno, bool alloc)
 {
-       // LAB 5: Your code here.
-       panic("file_block_walk not implemented");
+    // LAB 5: Your code here.
+    uint32_t blockno, r;
+    if (filebno >= NDIRECT + NINDIRECT) {
+        return -E_INVAL;
+    }
+    if (filebno < NDIRECT) {
+        *ppdiskbno = &f->f_direct[filebno];
+    } else {
+        if (f->f_indirect == 0) {
+            if (alloc) {
+                if ((r = alloc_block()) < 0) {
+                    return r;  // -E_NO_DISK
+                }
+                memset(diskaddr(r), 0, BLKSIZE);
+                // flush_block(diskaddr(r));
+                f->f_indirect = r;
+            } else {
+                return -E_NOT_FOUND;
+            }
+        }
+        uint32_t* indirect_block = (uint32_t*) diskaddr(f->f_indirect);
+        *ppdiskbno = &indirect_block[filebno - NDIRECT];
+    }
+    return 0;
 }
 
 // Set *blk to the address in memory where the filebno'th
@@ -149,8 +181,24 @@ file_block_walk(struct File *f, uint32_t filebno, uint32_t **ppdiskbno, bool all
 int
 file_get_block(struct File *f, uint32_t filebno, char **blk)
 {
-       // LAB 5: Your code here.
-       panic("file_get_block not implemented");
+    // LAB 5: Your code here.
+    uint32_t *pdiskbno, r;
+    if (filebno >= NDIRECT + NINDIRECT) {
+        return -E_INVAL;
+    }
+    if ((r = file_block_walk(f, filebno, &pdiskbno, 1)) < 0) {
+        return r;  // -E_NO_DISK
+    }
+    if (*pdiskbno == 0) {
+        if ((r = alloc_block()) < 0) {
+            return r;  // -E_NO_DISK
+        }
+        memset(diskaddr(r), 0, BLKSIZE);
+        // flush_block(diskaddr(r));
+        *pdiskbno = r;
+    }
+    *blk = (char*) diskaddr(*pdiskbno);
+    return 0;
 }
 
 // Try to find a file named "name" in dir.  If so, set *file to it.
@@ -206,6 +254,7 @@ dir_alloc_file(struct File *dir, struct File **file)
 			}
 	}
 	dir->f_size += BLKSIZE;
+    // 是不是意味着file_get_block需要分配block
 	if ((r = file_get_block(dir, i, &blk)) < 0)
 		return r;
 	f = (struct File*) blk;
@@ -257,9 +306,10 @@ walk_path(const char *path, struct File **pdir, struct File **pf, char *lastelem
 		name[path - p] = '\0';
 		path = skip_slash(path);
 
+        // 一定是个文件目录，而不是一个文件
 		if (dir->f_type != FTYPE_DIR)
 			return -E_NOT_FOUND;
-
+        // 如果是目标文件/目录，会在这个if语句中返回
 		if ((r = dir_lookup(dir, name, &f)) < 0) {
 			if (r == -E_NOT_FOUND && *path == '\0') {
 				if (pdir)

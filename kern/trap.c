@@ -202,6 +202,19 @@ trap_dispatch(struct Trapframe *tf)
 		sched_yield();
 		return;
 	}
+    // print_trapframe(tf);
+
+	if (tf->tf_trapno == IRQ_OFFSET + IRQ_KBD) {
+		lapic_eoi();
+        kbd_intr();
+		return;
+	}
+
+	if (tf->tf_trapno == IRQ_OFFSET + IRQ_SERIAL) {
+		lapic_eoi();
+        serial_intr();
+		return;
+	}
 
 	// Handle keyboard and serial interrupts.
 	// LAB 5: Your code here.

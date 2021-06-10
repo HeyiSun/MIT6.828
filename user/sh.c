@@ -55,7 +55,15 @@ again:
 			// then close the original 'fd'.
 
 			// LAB 5: Your code here.
-			panic("< redirection not implemented");
+			if ((fd = open(t, O_RDONLY)) < 0) {
+				cprintf("open %s for read: %e", t, fd);
+				exit();
+			}
+
+            if (fd != 0) {
+                dup(fd, 0);
+                close(fd);
+            }
 			break;
 
 		case '>':	// Output redirection
@@ -284,7 +292,7 @@ umain(int argc, char **argv)
 		usage();
 	if (argc == 2) {
 		close(0);
-		if ((r = open(argv[1], O_RDONLY)) < 0)
+		if ((r = open(argv[1], O_RDONLY)) < 0)   // 把脚本文件设成标准输入，这样readline就可以直接读取这个文件
 			panic("open %s: %e", argv[1], r);
 		assert(r == 0);
 	}

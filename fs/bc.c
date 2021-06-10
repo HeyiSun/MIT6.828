@@ -31,7 +31,7 @@ bc_pgfault(struct UTrapframe *utf)
 {
 	void *addr = (void *) utf->utf_fault_va;
 	uint32_t blockno = ((uint32_t)addr - DISKMAP) / BLKSIZE;
-	int r;
+	int res;
 
 	// Check that the fault was within the block cache region
 	if (addr < (void*)DISKMAP || addr >= (void*)(DISKMAP + DISKSIZE))
@@ -50,11 +50,11 @@ bc_pgfault(struct UTrapframe *utf)
 	// LAB 5: you code here:
     // 直接修改addr，因为下面sys_page_map要求addr是page aligned
     addr = (void*) ROUNDDOWN(addr, PGSIZE);
-    int res = sys_page_alloc(0, addr, PTE_U | PTE_P | PTE_W);
+    res = sys_page_alloc(0, addr, PTE_U | PTE_P | PTE_W);
     if (res < 0) {
         panic("bc_pgfault: sys_page_alloc fail\n"); 
     }
-    uint32_t sectno = blockno * BLKSECT;
+    uint32_t sectno = blockno * BLKSECTS;
     res = ide_read(sectno, addr, BLKSECTS);
     if (res <0) {
         panic("bc_pgfault: ide_read error\n");
@@ -63,8 +63,8 @@ bc_pgfault(struct UTrapframe *utf)
 	// Clear the dirty bit for the disk block page since we just read the
 	// block from disk
     // PTE_SYSCALL相当于去掉了PTE_D的dirty位
-	if ((r = sys_page_map(0, addr, 0, addr, uvpt[PGNUM(addr)] & PTE_SYSCALL)) < 0)
-		panic("in bc_pgfault, sys_page_map: %e", r);
+	if ((res = sys_page_map(0, addr, 0, addr, uvpt[PGNUM(addr)] & PTE_SYSCALL)) < 0)
+		panic("in bc_pgfault, sys_page_map: %e", res);
 
 	// Check that the block we read was allocated. (exercise for
 	// the reader: why do we do this *after* reading the block
@@ -83,7 +83,7 @@ bc_pgfault(struct UTrapframe *utf)
 void
 flush_block(void *addr)
 {
-	uint32_t blockno = ((uint32_t)addr - DISKMAP) / BLKSIZE;
+	uint32_t blockno = ((uint32_t)addr - DISKMAP) / BLKSIZE, r;
 
 	if (addr < (void*)DISKMAP || addr >= (void*)(DISKMAP + DISKSIZE))
 		panic("flush_block of bad va %08x", addr);

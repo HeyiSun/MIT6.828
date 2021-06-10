@@ -37,7 +37,7 @@ fd2data(struct Fd *fd)
 // Sets *fd_store to the corresponding fd page virtual address.
 //
 // fd_alloc does NOT actually allocate an fd page.
-// It is up to the caller to allocate the page somehow.
+// It is up to the caller to allocate the page somehow.(对于打开文件这个操作，在fd_alloc后，在openfile_alloc中通过检测page ref的方式，在必要的时候调用sys_page_alloc来为OpenFile结构体中的o_fd分配内存，然后把这个内存映射给当前进程的fd)
 // This means that if someone calls fd_alloc twice in a row
 // without allocating the first page we return, we'll return the same
 // page the second time.

@@ -21,12 +21,12 @@ argnext(struct Argstate *args)
 	if (args->curarg == 0)
 		return -1;
 
-	if (!*args->curarg) {
+	if (!*args->curarg) {  // args->curarg是空字符
 		// Need to process the next argument
 		// Check for end of argument list
-		if (*args->argc == 1
-		    || args->argv[1][0] != '-'
-		    || args->argv[1][1] == '\0')
+		if (*args->argc == 1   // 无参数
+		    || args->argv[1][0] != '-' // 一开始就不是-x这种格式
+		    || args->argv[1][1] == '\0') // 唯一参数就是一个'-'
 			goto endofargs;
 		// Shift arguments down one
 		args->curarg = args->argv[1] + 1;

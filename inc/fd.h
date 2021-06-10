@@ -24,11 +24,11 @@ struct Dev {
 };
 
 struct FdFile {
-	int id;
+	int id; // 这个存的是fs进程中Fd table的索引，这样可以方便找到与当前struct Fd共享内存的fs进程的struct Fd
 };
 
 struct Fd {
-	int fd_dev_id;
+	int fd_dev_id; // 这个Fd的类型,比如文件,管道等等,
 	off_t fd_offset;
 	int fd_omode;
 	union {

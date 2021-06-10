@@ -15,3 +15,4 @@ $(OBJDIR)/user/%: $(OBJDIR)/user/%.o $(OBJDIR)/lib/entry.o $(USERLIBS:%=$(OBJDIR
 	$(V)$(NM) -n $@.debug > $@.sym
 	$(V)$(OBJCOPY) -R .stab -R .stabstr --add-gnu-debuglink=$(basename $@.debug) $@.debug $@
 
+# -nostdlib指不使用libc参与编译，也就不需要main函数的加入
